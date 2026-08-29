@@ -3,7 +3,8 @@
 An MCP server and CLI for [Infomaniak kSuite](https://www.infomaniak.com/en/ksuite)
 contacts, calendars and reminders, over the standard CalDAV and CardDAV endpoints.
 
-No third party dependencies. It runs on stock Python 3.11 or newer.
+No third party dependencies. It runs on the Python that ships with macOS and most
+Linux distributions, 3.9 or newer, so there is nothing to install.
 
 ## Why
 
@@ -21,9 +22,11 @@ it awkward to automate, and both are handled here:
 ```bash
 git clone https://github.com/<you>/infomaniak-mcp
 cd infomaniak-mcp
+python3 -m unittest discover -s tests   # optional, confirms it runs here
 ```
 
-That is the whole install. There is nothing to build.
+That is the whole install. There is nothing to build and nothing to download.
+The macOS system interpreter at `/usr/bin/python3` is enough.
 
 ## Credentials
 
@@ -125,11 +128,12 @@ itself, so it is also the test.
 ## Tests
 
 ```bash
-python3 -m unittest discover -s tests -v
+PYTHONPATH=src python3 -m unittest discover -s tests -v
 ```
 
 The tests cover the encoding helpers and the vCard and iCalendar builders. They do not
-touch the network, so they run without credentials.
+touch the network, so they run without credentials. They are also the fastest way to
+confirm the interpreter on a given machine is new enough.
 
 ## Notes
 

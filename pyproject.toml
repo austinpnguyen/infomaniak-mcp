@@ -7,10 +7,17 @@ name = "infomaniak-mcp"
 version = "0.1.0"
 description = "MCP server and CLI for Infomaniak kSuite contacts, calendars and reminders over CalDAV and CardDAV"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.9"
 license = { text = "MIT" }
 authors = [{ name = "Austin Nguyen" }]
 keywords = ["mcp", "caldav", "carddav", "infomaniak", "ksuite", "contacts", "calendar"]
+classifiers = [
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+]
 dependencies = []
 
 [project.scripts]
