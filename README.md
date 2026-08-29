@@ -6,6 +6,18 @@ contacts, calendars and reminders, over the standard CalDAV and CardDAV endpoint
 No third party dependencies. It runs on the Python that ships with macOS and most
 Linux distributions, 3.9 or newer, so there is nothing to install.
 
+## What kSuite is
+
+[kSuite](https://www.infomaniak.com/en/ksuite) is Infomaniak's collaborative suite:
+mail, calendars and contacts, plus kDrive for files, kChat and kMeet. Infomaniak is a
+Swiss company that, in its own words, "designs and manages its own data centers in
+Switzerland" and whose "employees hold the majority of its capital". A free tier for
+individuals, my kSuite, exists alongside the paid organisation plans.
+
+What matters here is that the suite is built on open protocols rather than a private
+API. Contacts and calendars are served over CardDAV and CalDAV at `sync.infomaniak.com`,
+which is what this project speaks. Nothing below depends on a vendor SDK.
+
 ## Why
 
 Infomaniak exposes CalDAV and CardDAV at `sync.infomaniak.com`, but two details make
@@ -16,7 +28,7 @@ it awkward to automate, and both are handled here:
    does not fail cleanly: the server accepts any username at the authentication step
    and echoes it straight back as the principal path, so a mailbox address signs in
    successfully and only fails later with a `404` on a principal that was never real.
-   The id appears in the configuration profile Infomaniak generates for Apple devices.
+   [Credentials](#2-the-account-id) shows the screen that prints the id.
 2. The CardDAV **write** path double-encodes some UTF-8, so a contact saved from a
    phone can be silently corrupted. See [Known server defect](#known-server-defect).
 
@@ -56,16 +68,26 @@ made in one account returns `401` on another.
 ### 2. The account id
 
 This is the DAV username, an internal identifier such as `AB12345`. It is **not** your
-mailbox address, and no page in the interface presents it as "your username", so it has
-to be read out of the configuration profile Infomaniak generates for Apple devices.
+mailbox address. Nothing in the interface labels it "your username", but the
+synchronisation help screen prints it in full.
 
 1. Open [ksuite.infomaniak.com](https://ksuite.infomaniak.com) and go to **Contacts**.
 2. In the left sidebar click **Synchronise your contacts on all your devices**.
-3. Follow the Apple route. macOS shows an install dialog for a profile called
-   *Infomaniak autoconfiguration*, and the **User Name** field on it is your account id.
-   You do not have to install the profile, reading the dialog is enough.
+3. Choose any device, pick **My Contacts & Calendars**, then open the
+   **Manual synchronization** tab.
 
-If you would rather read the file directly, the downloaded `.mobileconfig` is plain XML:
+![Infomaniak's manual synchronisation panel. The User name row carries the account id.](docs/manual-sync-settings.png)
+
+The same panel confirms the other two settings: the server is
+`https://sync.infomaniak.com/`, and the password is an account password rather than
+anything generated on that screen.
+
+One caveat, measured rather than assumed. The panel offers the username in two forms,
+`AB12345@sync.infomaniak.com` and a bare `AB12345`. Paired with an application password,
+only the bare form authenticates; the suffixed form answers `401`. Use the bare id.
+
+If you would rather not click through the interface, the profile that the
+**Automatic synchronization** tab downloads is plain XML and carries the same value:
 
 ```bash
 grep -A1 CardDAVUsername ~/Downloads/*.mobileconfig
