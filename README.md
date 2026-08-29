@@ -65,6 +65,23 @@ Application passwords belong to a single account. If you have more than one Info
 account, check which one you are signed in as before generating, because a password
 made in one account returns `401` on another.
 
+Do not confuse it with the other password Infomaniak issues. The same page carries a
+banner reading *If you want to generate a password for your email addresses, use the
+configuration wizard*, and that wizard hands out a mailbox password instead:
+
+![Infomaniak's mail configuration wizard, which issues a mailbox password for IMAP and SMTP rather than an application password.](docs/mail-configuration-wizard.png)
+
+The two are not interchangeable. Measured on one account, each password is accepted by
+exactly one service:
+
+| Password | CardDAV and CalDAV | IMAP |
+| --- | --- | --- |
+| Application password, from the page above | works | rejected |
+| Mailbox password, from the wizard | `401` | works |
+
+This server speaks CardDAV and CalDAV only, so the application password is the one you
+want. The wizard matters only if you are also setting up a mail client.
+
 ### 2. The account id
 
 This is the DAV username, an internal identifier such as `AB12345`. It is **not** your
