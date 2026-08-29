@@ -12,8 +12,11 @@ Infomaniak exposes CalDAV and CardDAV at `sync.infomaniak.com`, but two details 
 it awkward to automate, and both are handled here:
 
 1. The DAV username is the internal account id such as `AB12345`, not the mailbox
-   address. Nothing in the public documentation says so. The value appears in the
-   configuration profile Infomaniak generates for Apple devices.
+   address, and nothing in the public documentation says so. Worse, the wrong value
+   does not fail cleanly: the server accepts any username at the authentication step
+   and echoes it straight back as the principal path, so a mailbox address signs in
+   successfully and only fails later with a `404` on a principal that was never real.
+   The id appears in the configuration profile Infomaniak generates for Apple devices.
 2. The CardDAV **write** path double-encodes some UTF-8, so a contact saved from a
    phone can be silently corrupted. See [Known server defect](#known-server-defect).
 
@@ -30,25 +33,78 @@ The macOS system interpreter at `/usr/bin/python3` is enough.
 
 ## Credentials
 
-Generate an application password in the Infomaniak manager under
-**My Profile → Application password(s)**, then export two variables:
+You need two values. Neither is your normal login password, and neither is your email
+address, which is the part that trips most people up.
+
+### 1. The application password
+
+1. Sign in at [manager.infomaniak.com](https://manager.infomaniak.com).
+2. Open the account menu at the top right, then **My Profile**.
+3. In the left sidebar choose **Application password(s)**.
+4. Click **Generate an application password**, give it a name such as
+   `mcp`, and confirm.
+5. Use the **Copy** button in the dialog. Do not select the text by hand: the value is
+   displayed in groups of four characters and a manual selection tends to lose part of
+   it. Spaces are ignored, so `AB12 CD34` and `ABCD1234` are the same password.
+6. Save it now. The dialog says so and means it: once closed, the value is gone and you
+   have to generate a new one.
+
+Application passwords belong to a single account. If you have more than one Infomaniak
+account, check which one you are signed in as before generating, because a password
+made in one account returns `401` on another.
+
+### 2. The account id
+
+This is the DAV username, an internal identifier such as `AB12345`. It is **not** your
+mailbox address, and no page in the interface presents it as "your username", so it has
+to be read out of the configuration profile Infomaniak generates for Apple devices.
+
+1. Open [ksuite.infomaniak.com](https://ksuite.infomaniak.com) and go to **Contacts**.
+2. In the left sidebar click **Synchronise your contacts on all your devices**.
+3. Follow the Apple route. macOS shows an install dialog for a profile called
+   *Infomaniak autoconfiguration*, and the **User Name** field on it is your account id.
+   You do not have to install the profile, reading the dialog is enough.
+
+If you would rather read the file directly, the downloaded `.mobileconfig` is plain XML:
 
 ```bash
-export INFOMANIAK_USER=AB12345              # internal account id, not the email
-export INFOMANIAK_APP_PASSWORD=xxxxxxxxxxxx
+grep -A1 CardDAVUsername ~/Downloads/*.mobileconfig
 ```
 
-To find your account id, open **Contacts → Synchronise your contacts on all your
-devices** in kSuite and look at the generated Apple configuration profile. The
-`User Name` field in it is the id.
+### Putting them together
 
-Optional:
+```bash
+export INFOMANIAK_USER=AB12345              # the account id from step 2
+export INFOMANIAK_APP_PASSWORD=xxxxxxxxxxxx # the password from step 1
+```
+
+Check the pair before going further:
+
+```bash
+PYTHONPATH=src python3 -m infomaniak_mcp.cli collections
+```
+
+That prints every address book and calendar the account can reach. If instead you get
+`401`, the cause is almost always one of these, in order of likelihood:
+
+| Symptom | Cause |
+|---|---|
+| `the principal ... does not exist` | `INFOMANIAK_USER` is a mailbox address, or any other string that is not the account id. Authentication passed, discovery did not |
+| `401` after generating a new password | The password was generated in a different Infomaniak account. Each account needs its own |
+| `401` on a fresh copy and paste | Part of the value was lost selecting it by hand. Generate a new one and use the **Copy** button |
+
+Note that a wrong username does not produce a `401`. Only a wrong password does. That
+is why the error above names the principal rather than talking about credentials.
+
+### Optional settings
 
 ```bash
 export INFOMANIAK_DAV_URL=https://sync.infomaniak.com   # default
-export INFOMANIAK_ADDRESSBOOK="Personal"            # default: the first one found
+export INFOMANIAK_ADDRESSBOOK="Personal"                # default: the first one found
 export INFOMANIAK_CALENDAR="Personal"                   # default: the first one found
 ```
+
+Run `collections` to see the exact names to use for the last two.
 
 Everything else, the principal path and the collection URLs, is discovered at runtime.
 Nothing about an account is hard coded.

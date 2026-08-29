@@ -129,7 +129,20 @@ class InfomaniakDav:
         return self._principal
 
     def _home(self, prop: str) -> str | None:
-        xml = self._propfind(self.principal, prop, "0")
+        try:
+            xml = self._propfind(self.principal, prop, "0")
+        except DavError as exc:
+            if "404" in str(exc):
+                raise DavError(
+                    f"the principal {self.principal} does not exist, so "
+                    f"INFOMANIAK_USER={self.username!r} is not a valid account id. "
+                    "The server accepts any username at the authentication step and "
+                    "simply echoes it back as the principal path, so a mailbox address "
+                    "signs in and then fails here. Use the internal account id, for "
+                    "example AB12345, which the Apple configuration profile shows as "
+                    "its User Name field."
+                ) from None
+            raise
         m = re.search(r"<d:href>([^<]+)</d:href>", xml.split(prop.split("/")[0].lstrip("<"))[-1]) \
             if False else None
         hrefs = re.findall(r"<d:href>([^<]+)</d:href>", xml)
