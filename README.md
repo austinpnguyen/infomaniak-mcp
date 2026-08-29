@@ -84,8 +84,8 @@ Check the pair before going further:
 PYTHONPATH=src python3 -m infomaniak_mcp.cli collections
 ```
 
-That prints every address book and calendar the account can reach. If instead you get
-`401`, the cause is almost always one of these, in order of likelihood:
+That prints every address book and calendar the account can reach. If it fails instead,
+the cause is almost always one of these:
 
 | Symptom | Cause |
 |---|---|
