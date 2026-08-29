@@ -23,7 +23,7 @@ it awkward to automate, and both are handled here:
 ## Install
 
 ```bash
-git clone https://github.com/<you>/infomaniak-mcp
+git clone https://github.com/austinpnguyen/infomaniak-mcp
 cd infomaniak-mcp
 python3 -m unittest discover -s tests   # optional, confirms it runs here
 ```
@@ -275,7 +275,7 @@ itself, so it is also the test.
 ## Tests
 
 ```bash
-PYTHONPATH=src python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 ```
 
 The tests cover the encoding helpers and the vCard and iCalendar builders. They do not
