@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infomaniak-mcp"
+version = "0.1.0"
+description = "MCP server and CLI for Infomaniak kSuite contacts, calendars and reminders over CalDAV and CardDAV"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Austin Nguyen" }]
+keywords = ["mcp", "caldav", "carddav", "infomaniak", "ksuite", "contacts", "calendar"]
+dependencies = []
+
+[project.scripts]
+infomaniak-mcp = "infomaniak_mcp.server:main"
+infomaniak-cli = "infomaniak_mcp.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
