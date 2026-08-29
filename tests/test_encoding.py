@@ -1,4 +1,13 @@
 """Encoding helpers. No network, so these run without credentials."""
+
+import pathlib
+import sys
+
+# Allow running straight from a clone with no install step and no PYTHONPATH.
+_SRC = pathlib.Path(__file__).resolve().parent.parent / "src"
+if _SRC.is_dir() and str(_SRC) not in sys.path:
+    sys.path.insert(0, str(_SRC))
+
 import unittest
 
 from infomaniak_mcp.dav import carddav_unsafe, double_encoded, unfold
