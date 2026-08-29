@@ -109,7 +109,49 @@ Run `collections` to see the exact names to use for the last two.
 Everything else, the principal path and the collection URLs, is discovered at runtime.
 Nothing about an account is hard coded.
 
-## Use as an MCP server
+## Install into an MCP client
+
+Both clients below run the server as a subprocess and talk to it on stdin and stdout,
+so the only things they need are a command and the two environment variables.
+
+Replace `/path/to/infomaniak-mcp` with wherever you cloned this, and `AB12345` with
+your account id.
+
+### Claude Code
+
+```bash
+claude mcp add infomaniak --scope user \
+  -e INFOMANIAK_USER=AB12345 \
+  -e INFOMANIAK_APP_PASSWORD=xxxxxxxxxxxx \
+  -e PYTHONPATH=/path/to/infomaniak-mcp/src \
+  -- python3 -m infomaniak_mcp
+```
+
+`--scope user` makes it available in every project. Use `--scope project` instead to
+share it with a repository through a checked in `.mcp.json`, but do not do that with
+credentials written inline, see [below](#keeping-the-password-out-of-the-config).
+
+Check it came up:
+
+```bash
+claude mcp list
+```
+
+It should print `infomaniak: ... - ✓ Connected`. To remove it again:
+
+```bash
+claude mcp remove infomaniak --scope user
+```
+
+### Claude Desktop
+
+Edit the configuration file, creating it if it does not exist:
+
+| Platform | Path |
+|---|---|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/Claude/claude_desktop_config.json` |
 
 ```json
 {
@@ -127,7 +169,56 @@ Nothing about an account is hard coded.
 }
 ```
 
-Tools exposed:
+Restart Claude Desktop afterwards. The server appears under the tools icon in the
+message box.
+
+On Windows, use `python` rather than `python3`, and write the path with forward
+slashes or escaped backslashes.
+
+### Keeping the password out of the config
+
+Both methods above put the application password in a file that other tools read, sync
+and back up. A small launcher avoids that by reading the value at startup instead:
+
+```sh
+#!/bin/sh
+# infomaniak-mcp-launch
+SECRETS="$HOME/.config/infomaniak.env"     # INFOMANIAK_USER=... and INFOMANIAK_APP_PASSWORD=...
+REPO="/path/to/infomaniak-mcp"
+
+[ -r "$SECRETS" ] || { echo "cannot read $SECRETS" >&2; exit 1; }
+INFOMANIAK_USER=$(grep '^INFOMANIAK_USER=' "$SECRETS" | cut -d= -f2- | tr -d ' \n')
+INFOMANIAK_APP_PASSWORD=$(grep '^INFOMANIAK_APP_PASSWORD=' "$SECRETS" | cut -d= -f2- | tr -d ' \n')
+export INFOMANIAK_USER INFOMANIAK_APP_PASSWORD
+export PYTHONPATH="$REPO/src"
+
+exec python3 -m infomaniak_mcp
+```
+
+```bash
+chmod 700 ~/bin/infomaniak-mcp-launch
+chmod 600 ~/.config/infomaniak.env
+claude mcp add infomaniak --scope user -- ~/bin/infomaniak-mcp-launch
+```
+
+The client config then holds a path and nothing else. Because the launcher reads the
+file itself rather than taking an argument, the password never appears in the process
+list either. Rotating the password means editing one file, with no client config to
+update.
+
+### Any other client
+
+The server speaks JSON-RPC 2.0 on stdin and stdout. Anything that can run a command
+and exchange line delimited JSON can drive it:
+
+```bash
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' \
+  | PYTHONPATH=src python3 -m infomaniak_mcp
+```
+
+## Tools
 
 | Tool | What it does |
 |---|---|
